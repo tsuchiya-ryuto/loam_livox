@@ -40,6 +40,7 @@
 #include <cmath>
 #include <nav_msgs/Odometry.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/passthrough.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -112,11 +113,13 @@ class Laser_feature
     std::vector< std::vector<pcl::PointCloud<pcl::PointXYZI> > >   m_map_pointcloud_surface_vec_vec;
     std::vector< std::vector<pcl::PointCloud<pcl::PointXYZI> > >   m_map_pointcloud_corner_vec_vec;
     double m_minimum_range = 0.01;
+    float m_minimum_distance = 0.1;
 
     ros::Publisher            m_pub_pc_livox_corners, m_pub_pc_livox_surface, m_pub_pc_livox_full;
     sensor_msgs::PointCloud2  temp_out_msg;
     pcl::VoxelGrid<PointType> m_voxel_filter_for_surface;
     pcl::VoxelGrid<PointType> m_voxel_filter_for_corner;
+    pcl::PassThrough<PointType> pass;
 
     template<typename T>
     T get_ros_parameter(ros::NodeHandle &nh , const std::string parameter_name, T & parameter, const T default_val)
@@ -138,6 +141,7 @@ class Laser_feature
         get_ros_parameter<float>( nh,"feature_extraction/mapping_plane_resolution", m_plane_resolution, 0.8 );
         get_ros_parameter<float>( nh,"feature_extraction/mapping_line_resolution", m_line_resolution, 0.8 );
         get_ros_parameter<double>(nh, "feature_extraction/minimum_range", m_minimum_range, 0.1 );
+        get_ros_parameter<float>(nh, "feature_extraction/minimum_distance", m_minimum_distance, 0.1 );
         get_ros_parameter<int>( nh,"common/if_motion_deblur", m_if_motion_deblur, 1 );
         get_ros_parameter<int>( nh,"common/piecewise_number", m_piecewise_number, 3 );
         get_ros_parameter<int>(nh, "common/odom_mode", m_odom_mode, 0 );
@@ -191,6 +195,8 @@ class Laser_feature
 
         m_voxel_filter_for_surface.setLeafSize( m_plane_resolution / 2, m_plane_resolution / 2, m_plane_resolution / 2 );
         m_voxel_filter_for_corner.setLeafSize( m_line_resolution, m_line_resolution, m_line_resolution );
+        pass.setFilterFieldName("x");
+        pass.setFilterLimits(m_minimum_distance, 500);
         if ( m_if_pub_each_line )
         {
             for ( int i = 0; i < m_laser_scan_number; i++ )
@@ -364,6 +370,8 @@ class Laser_feature
                         *livox_corners = m_map_pointcloud_corner_vec_vec[ current_lidar_index ][ i ];
                     }
 
+                    pass.setInputCloud(livox_full);
+                    pass.filter(*livox_full);
                     pcl::toROSMsg( *livox_full, temp_out_msg );
                     temp_out_msg.header.stamp = current_time;
                     temp_out_msg.header.frame_id = "camera_init";
@@ -371,6 +379,8 @@ class Laser_feature
 
                     m_voxel_filter_for_surface.setInputCloud( livox_surface );
                     m_voxel_filter_for_surface.filter( *livox_surface );
+                    pass.setInputCloud(livox_surface);
+                    pass.filter(*livox_surface);
                     pcl::toROSMsg( *livox_surface, temp_out_msg );
                     temp_out_msg.header.stamp = current_time;
                     temp_out_msg.header.frame_id = "camera_init";
@@ -378,6 +388,8 @@ class Laser_feature
 
                     m_voxel_filter_for_corner.setInputCloud( livox_corners );
                     m_voxel_filter_for_corner.filter( *livox_corners );
+                    pass.setInputCloud(livox_corners);
+                    pass.filter(*livox_corners);
                     pcl::toROSMsg( *livox_corners, temp_out_msg );
                     temp_out_msg.header.stamp = current_time;
                     temp_out_msg.header.frame_id = "camera_init";
