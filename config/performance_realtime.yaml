@@ -4,7 +4,7 @@ common:
     odom_mode: 1
     if_motion_deblur: 0             # motion deblur, 0: piesewise processing; 1: linear interpolation
     if_save_to_pcd_files: 0
-    if_update_mean_and_cov_incrementally: 0
+    if_update_mean_and_cov_incrementally: 1
     threshold_cell_revisit: 100000  # if update frame index bigger than this threshold, treat target cell as revisited
 
 feature_extraction:
@@ -38,11 +38,11 @@ mapping:
     surround_pointcloud_resolution: 0.5
 
 loop_closure:
-    if_enable_loop_closure: 0
+    if_enable_loop_closure: 1
     if_dump_keyframe_data: 0
     scans_of_each_keyframe: 300
     scans_between_two_keyframe: 100
-    minimum_keyframe_differen: 200
+    minimum_keyframe_differen: 20
     minimum_similarity_linear: 0.65
     minimum_similarity_planar: 0.94
     map_alignment_resolution: 0.1
