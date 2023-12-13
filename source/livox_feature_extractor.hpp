@@ -47,7 +47,6 @@
 #endif
 
 #include <Eigen/Eigen>
-#include <Eigen/Eigen>
 #include <nav_msgs/Odometry.h>
 
 #include <pcl/filters/voxel_grid.h>

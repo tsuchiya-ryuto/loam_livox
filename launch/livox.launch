@@ -1,11 +1,14 @@
 <launch>
-    <rosparam command="load" file="$(find loam_livox)/config/performance_realtime.yaml" />
+    <rosparam command="load" file="$(find loam_livox)/config/performance_precision.yaml" />
     <param name="common/pcd_save_dir" type="string" value="$(env HOME)/Loam_livox" />
     <param name="common/log_save_dir" type="string" value="$(env HOME)/Loam_livox" />
     <param name="common/loop_save_dir" type="string" value="$(env HOME)/Loam_livox" />
 
     <param name="common/if_verbose_screen_printf" type="int" value="1"/>
-    
+ 		
+		<arg name="voxel_size" default="0.10"/>
+ 		<param name="mapping/surround_pointcloud_resolution" value="$(arg voxel_size)"/>
+
     <node pkg="loam_livox" type="livox_scanRegistration" name="livox_scanRegistration">
      <remap from="/laser_points_0" to="/livox/lidar" />
     </node>
